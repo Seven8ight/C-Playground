@@ -8,11 +8,19 @@
 
 #define NO_WINNER '\0'
 
-typedef enum GameStatus
+typedef enum BoardStatus
 {
     CONTINUE,
     FULL
-} Status;
+} BStatus;
+
+typedef enum GameStatus
+{
+    WIN,
+    TIE,
+    IN_PROGRESS,
+    ERROR
+} GStatus;
 
 typedef struct player
 {
@@ -26,6 +34,6 @@ typedef struct matrixBoard
 
 Board *createBoard();
 void printBoard(Board *board);
-void playerInput(Player *player, Board *board);
+GStatus playerInput(Player *player, Board *board);
 char checkWinner(Board *board);
-Status boardFilled(Board *board);
+BStatus boardFilled(Board *board);
