@@ -48,7 +48,7 @@ void printBoard(Board *board)
     }
 }
 
-bool boardFilled(Board *board)
+Status boardFilled(Board *board)
 {
     if (!board)
     {
@@ -59,10 +59,10 @@ bool boardFilled(Board *board)
     for (int i = 0; i < 9; i++)
     {
         if (board->board[i] != 'X' && board->board[i] != 'O')
-            return false;
+            return CONTINUE;
     }
 
-    return true;
+    return FULL;
 }
 
 void playerInput(Player *player, Board *board)
@@ -75,7 +75,7 @@ void playerInput(Player *player, Board *board)
 
     int position;
 
-    printf("Player %c position: ", (char)*player->letter);
+    printf("Player %c position: ", (char)player->letter);
     scanf("%d", &position);
 
     if (position <= 0 || position > 9)
@@ -92,14 +92,14 @@ void playerInput(Player *player, Board *board)
             scanf("%d", &position);
         }
 
-    board->board[position - 1] = (char)*player->letter;
+    board->board[position - 1] = (char)player->letter;
 
     printBoard(board);
 
     char winner = checkWinner(board);
-    if (checkWinner(board) != 70)
+    if (winner != NO_WINNER)
     {
-        printf("Player %c wins", *player->letter);
+        printf("Player %c wins", player->letter);
         free(player);
         free(board->board);
         free(board);
@@ -107,7 +107,7 @@ void playerInput(Player *player, Board *board)
     }
 
     bool boardCheck = boardFilled(board);
-    if (boardCheck)
+    if (boardCheck == FULL)
     {
         printf("Tie\n");
         free(player);
@@ -122,7 +122,7 @@ char checkWinner(Board *board)
     if (!board)
     {
         perror("Board memory is corrupted");
-        return 70;
+        return NO_WINNER;
     }
 
     if ((board->board[0] == board->board[1] && board->board[1] == board->board[2]) && (board->board[0] == 'X' || board->board[0] == 'O'))
@@ -137,8 +137,14 @@ char checkWinner(Board *board)
         return board->board[1];
     else if ((board->board[2] == board->board[4] && board->board[4] == board->board[6]) && (board->board[2] == 'X' || board->board[2] == 'O'))
         return board->board[2];
+    else if ((board->board[0] == board->board[3] && board->board[3] == board->board[6]) && (board->board[0] == 'X' || board->board[2] == 'O'))
+        return board->board[0];
+    else if ((board->board[1] == board->board[4] && board->board[4] == board->board[7]) && (board->board[1] == 'X' || board->board[2] == 'O'))
+        return board->board[0];
+    else if ((board->board[2] == board->board[5] && board->board[5] == board->board[8]) && (board->board[2] == 'X' || board->board[2] == 'O'))
+        return board->board[0];
     else
-        return 70;
+        return NO_WINNER;
 }
 
 int main()
@@ -153,7 +159,7 @@ int main()
         while (toupper(letter) != 'X' && toupper(letter) != 'O')
         {
             printf("Player 1, try again, X or O: ");
-            scanf("%c", &letter);
+            scanf(" %c", &letter);
         }
 
     letter = toupper(letter);
@@ -164,20 +170,19 @@ int main()
     if (letter == 'X')
     {
         letter2 = 'O';
-        player1->letter = &letter;
-        player2->letter = &letter2;
+        player1->letter = letter;
+        player2->letter = letter2;
     }
     else
     {
         letter2 = 'X';
-        player1->letter = &letter;
-        player2->letter = &letter2;
+        player1->letter = letter;
+        player2->letter = letter2;
     }
 
-    int positionInput,
-        playerPlaying = 1;
+    int playerPlaying = 1;
 
-    while (positionInput != -1)
+    while (1)
     {
         if (playerPlaying == 1)
         {

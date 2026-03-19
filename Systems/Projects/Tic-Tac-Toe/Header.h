@@ -6,9 +6,17 @@
 #include <string.h>
 #include <ctype.h>
 
+#define NO_WINNER '\0'
+
+typedef enum GameStatus
+{
+    CONTINUE,
+    FULL
+} Status;
+
 typedef struct player
 {
-    char *letter;
+    char letter;
 } Player;
 
 typedef struct matrixBoard
@@ -20,4 +28,4 @@ Board *createBoard();
 void printBoard(Board *board);
 void playerInput(Player *player, Board *board);
 char checkWinner(Board *board);
-bool boardFilled(Board *board);
+Status boardFilled(Board *board);
