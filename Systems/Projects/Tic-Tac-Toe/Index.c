@@ -89,7 +89,7 @@ GStatus playerInput(Player *player, Board *board)
 
         if (position <= 0 || position > 9)
         {
-            printf("Invalid input, range [1-9]");
+            printf("Invalid input, range [1-9]: ");
             while (getchar() != '\n')
                 ;
             continue;
@@ -97,7 +97,7 @@ GStatus playerInput(Player *player, Board *board)
 
         if (board->board[position - 1] == 'X' || board->board[position - 1] == 'O')
         {
-            printf("Position occupied, try again");
+            printf("Position occupied, try again: ");
             while (getchar() != '\n')
                 ;
             continue;
@@ -166,6 +166,14 @@ int main()
 
     Player *player1 = malloc(sizeof(Player)),
            *player2 = malloc(sizeof(Player));
+
+    if (!player1 || !player2)
+    {
+        perror("Not enough memory");
+        free(board->board);
+        free(board);
+        return -1;
+    }
 
     if (letter == 'X')
     {
