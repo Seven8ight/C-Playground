@@ -24,7 +24,7 @@ Board *createBoard()
     return gameBoard;
 }
 
-void printBoard(Board *board)
+void printBoard(const Board *board)
 {
     if (!board)
     {
@@ -48,12 +48,12 @@ void printBoard(Board *board)
     }
 }
 
-BStatus boardFilled(Board *board)
+BStatus boardFilled(const Board *board)
 {
     if (!board)
     {
         perror("Board memory corrupted");
-        exit(-1);
+        return ERROR;
     }
 
     for (int i = 0; i < 9; i++)
@@ -117,13 +117,13 @@ GStatus playerInput(Player *player, Board *board)
     }
 
     bool boardCheck = boardFilled(board);
-    if (boardCheck == FULL)
+    if (boardCheck == FULL || boardCheck == ERROR)
         return TIE;
 
     return IN_PROGRESS;
 }
 
-char checkWinner(Board *board)
+char checkWinner(const Board *board)
 {
     if (!board)
     {
@@ -170,6 +170,12 @@ int main()
     if (!player1 || !player2)
     {
         perror("Not enough memory");
+
+        if (!player1)
+            free(player1);
+        else
+            free(player2);
+
         free(board->board);
         free(board);
         return -1;

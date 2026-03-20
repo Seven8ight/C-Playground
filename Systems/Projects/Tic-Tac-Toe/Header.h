@@ -11,7 +11,8 @@
 typedef enum BoardStatus
 {
     CONTINUE,
-    FULL
+    FULL,
+    ERROR
 } BStatus;
 
 typedef enum GameStatus
@@ -33,7 +34,7 @@ typedef struct matrixBoard
 } Board;
 
 Board *createBoard();
-void printBoard(Board *board);
+void printBoard(const Board *board);
 GStatus playerInput(Player *player, Board *board);
-char checkWinner(Board *board);
-BStatus boardFilled(Board *board);
+char checkWinner(const Board *board);
+BStatus boardFilled(const Board *board);
