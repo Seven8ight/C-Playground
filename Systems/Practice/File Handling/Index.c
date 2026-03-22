@@ -135,8 +135,8 @@ void eraseBinData(char *fileName, int valueToErase)
 
 int main()
 {
-    char fileName[] = "TextC.txt",
-         message[] = "This is a text file here";
+    char fileName[] = "Tips.txt",
+         message[] = "Network Programming";
 
     writeFile(fileName, TEXT, message, 0);
     readFile(fileName, TEXT);
