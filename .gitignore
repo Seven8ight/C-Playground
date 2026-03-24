@@ -3,3 +3,7 @@
 **/Index
 **/*.bin
 **/*.txt
+**/Without
+**/GetAddrInfo
+**/Client
+**/Server
