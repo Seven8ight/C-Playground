@@ -1,5 +1,4 @@
 #include <iostream>
-#include <map>
 
 template <typename F>
 class Node
@@ -21,7 +20,7 @@ Node<F> *createNode(F value)
 }
 
 template <typename F>
-class Stack
+class Queue
 {
 public:
     Node<F> *head = nullptr;
@@ -31,7 +30,7 @@ public:
         return this->head == nullptr ? true : false;
     }
 
-    void push(F value)
+    void enqueue(F value)
     {
         Node<F> *newNode = createNode<F>(value);
 
@@ -49,7 +48,7 @@ public:
         currentNode->nextNode = newNode;
     }
 
-    F pop()
+    F dequeue()
     {
         if (this->isEmpty())
             throw std::out_of_range("Stack is empty");
@@ -57,26 +56,16 @@ public:
         Node<F> *currentNode = this->head,
                 *prevNode = nullptr;
 
-        if (currentNode->nextNode == nullptr)
-        {
-            F value = this->head->value;
+        if (this->head->nextNode)
+            this->head = this->head->nextNode;
+        else
             this->head = nullptr;
-            delete currentNode;
 
-            return value;
-        }
+        F value = currentNode->value;
 
-        while (currentNode->nextNode != nullptr)
-        {
-            prevNode = currentNode;
-            currentNode = currentNode->nextNode;
-        }
-
-        prevNode->nextNode = nullptr;
-        F nodeValue = currentNode->value;
         delete currentNode;
 
-        return nodeValue;
+        return value;
     }
 
     void traverse()
@@ -109,51 +98,18 @@ public:
     }
 };
 
-bool validParentheses(std::string statement)
-{
-    std::map<char, char> brackets = {
-        {'}', '{'},
-        {')', '('},
-        {']', '['}};
-
-    Stack<char> stack = Stack<char>();
-
-    for (char bracket : statement)
-    {
-        if (bracket == '{' || bracket == '[' || bracket == '(')
-            stack.push(bracket);
-        else
-        {
-            char letter = stack.pop();
-
-            if (brackets.find(letter) != brackets.end())
-                if (stack.isEmpty() || letter != brackets.at(letter))
-                    return false;
-        }
-    }
-
-    return stack.isEmpty();
-}
-
 int main(int args, char *argc[])
 {
-    Stack<int> stack = Stack<int>();
+    Queue<int> queue = Queue<int>();
     int values[] = {1, 2, 3, 4, 5};
 
     for (int value : values)
     {
-        stack.push(value);
+        queue.enqueue(value);
     }
 
-    stack.traverse();
+    queue.traverse();
     std::cout << std::endl;
-
-    std::string brackets = "{([])}";
-    bool value = validParentheses(brackets);
-
-    std::cout << std::boolalpha;
-
-    std::cout << value;
 
     return 0;
 }
