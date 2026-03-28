@@ -14,6 +14,8 @@
 #include <fcntl.h>
 #include <sys/poll.h>
 #include <unistd.h>
+#include <curl/curl.h>
+#include <stdbool.h>
 
 #define HTTP 80
 #define BACKLOG 100
