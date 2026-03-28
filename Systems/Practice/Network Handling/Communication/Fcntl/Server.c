@@ -1,4 +1,4 @@
-#include "Header.h"
+#include "../../Header.h"
 
 int main(int argc, char *argv[])
 {
@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    fcntl(server_fd, F_SETFL, O_NONBLOCK); // makes the server fd non blocking towards socket and accept function calls.
     printf("Created server socket fd: %d\n", server_fd);
 
     status = bind(server_fd, (struct sockaddr *)&sa, sizeof sa);
