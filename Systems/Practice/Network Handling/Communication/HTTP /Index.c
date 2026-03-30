@@ -1,5 +1,14 @@
 #include "../../Header.h"
 
+typedef struct
+{
+    size_t responseLength;
+    char *fullData;
+    int statusCode;
+    char *headers;
+    char *body;
+} Response;
+
 int createServer(int port)
 {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -42,6 +51,8 @@ void POST(int server_fd, const char *url, const char *path, char *body);
 void PATCH(int server_fd, const char *url, const char *path, char *body);
 void PUT(int server_fd, const char *url, const char *path, char *body);
 void DELETE(int server_fd, const char *url, const char *path);
+Response *createResponse();
+void formatter(Response *httpResponse);
 
 int main(int argc, const char *args[])
 {
@@ -120,6 +131,8 @@ void GET(int server_fd, const char *url, const char *path)
     char message[BUFSIZ],
         buffer[BUFSIZ];
 
+    Response *getResponse = createResponse();
+
     snprintf(message, BUFSIZ,
              "GET %s HTTP/1.1\r\n"
              "Host: %s\r\n"
@@ -131,10 +144,14 @@ void GET(int server_fd, const char *url, const char *path)
     int sendRequest = send(server_fd, message, strlen(message), 0),
         bytes_sent;
 
+    size_t totalReceived = 0;
+
     while ((bytes_sent = recv(server_fd, buffer, BUFSIZ - 1, 0)) > 0)
     {
-        buffer[bytes_sent] = '\0';
-        printf("%s", buffer);
+        memcpy(getResponse->fullData + totalReceived, buffer, bytes_sent);
+        totalReceived += bytes_sent;
+        getResponse->responseLength += totalReceived;
+        getResponse->fullData[totalReceived] = '\0';
     }
 
     if (bytes_sent < 0)
@@ -142,6 +159,12 @@ void GET(int server_fd, const char *url, const char *path)
         fprintf(stderr, "Receiving error: %s", strerror(errno));
         return;
     }
+
+    formatter(getResponse);
+    printf("-----FORMATTED RESPONSE----\n\n");
+    printf("Response status code: %d\n\n", getResponse->statusCode);
+    printf("Response headers: %s\n\n", getResponse->headers);
+    printf("Response body:%s\n\n", getResponse->body);
 }
 void POST(int server_fd, const char *url, const char *path, char *body)
 {
@@ -291,5 +314,43 @@ void DELETE(int server_fd, const char *url, const char *path)
     {
         fprintf(stderr, "Receiving error: %s", strerror(errno));
         return;
+    }
+}
+Response *createResponse()
+{
+    Response *newResponse = malloc(sizeof(Response));
+
+    if (!newResponse)
+    {
+        perror("Memory");
+        return NULL;
+    }
+
+    newResponse->body = malloc(BUFSIZ);
+    newResponse->fullData = malloc(BUFSIZ);
+    newResponse->responseLength = 0;
+    newResponse->headers = malloc(BUFSIZ);
+    newResponse->statusCode = 0;
+
+    return newResponse;
+}
+void formatter(Response *httpResponse)
+{
+    if (!httpResponse)
+    {
+        perror("Invalid response");
+        return;
+    }
+
+    char *border = strstr(httpResponse->fullData, "\r\n\r\n");
+
+    if (border)
+    {
+        *border = '\0';
+        httpResponse->headers = httpResponse->fullData;
+
+        httpResponse->body = border + 4;
+
+        sscanf(httpResponse->headers, "HTTP/1.1 %d", &httpResponse->statusCode);
     }
 }
