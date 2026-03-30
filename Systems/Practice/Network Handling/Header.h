@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <curl/curl.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #define HTTP 80
 #define BACKLOG 100
