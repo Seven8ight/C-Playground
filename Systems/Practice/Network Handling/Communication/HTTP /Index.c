@@ -64,7 +64,7 @@ int main(int argc, const char *args[])
     if (server == -1)
         return -1;
 
-        addrinfo *ipInfo = addressInfo(requestUrl);
+    addrinfo *ipInfo = addressInfo(requestUrl);
 
     if (ipInfo == NULL)
         return -2;
@@ -119,7 +119,6 @@ void GET(int server_fd, const char *url, const char *path)
 {
     char message[BUFSIZ],
         buffer[BUFSIZ];
-    memset(&message, '\0', sizeof message);
 
     snprintf(message, BUFSIZ,
              "GET %s HTTP/1.1\r\n"
@@ -132,7 +131,7 @@ void GET(int server_fd, const char *url, const char *path)
     int sendRequest = send(server_fd, message, strlen(message), 0),
         bytes_sent;
 
-    while ((bytes_sent = recv(server_fd, buffer, BUFSIZ, 0)) > 0)
+    while ((bytes_sent = recv(server_fd, buffer, BUFSIZ - 1, 0)) > 0)
     {
         buffer[bytes_sent] = '\0';
         printf("%s", buffer);
@@ -148,7 +147,6 @@ void POST(int server_fd, const char *url, const char *path, char *body)
 {
     char message[BUFSIZ],
         buffer[BUFSIZ];
-    memset(&message, '\0', sizeof message);
 
     size_t bodyLength = strlen(body);
 
@@ -163,21 +161,31 @@ void POST(int server_fd, const char *url, const char *path, char *body)
              "%s",
              path, url, bodyLength, body);
 
-    int sendRequest = send(server_fd, message, strlen(message), 0),
-        bytes_sent = recv(server_fd, buffer, BUFSIZ, 0);
+    int postRequest = send(server_fd, message, strlen(message), 0),
+        postResponse;
 
-    if (bytes_sent == 0)
+    if (postRequest == -1)
     {
-        printf("Socket closed unexpectedly\n");
+        fprintf(stderr, "Request error: %s", strerror(postRequest));
         return;
     }
-    else
+
+    while ((postResponse = recv(server_fd, buffer, BUFSIZ - 1, 0)) > 0)
+    {
+        buffer[postResponse] = '\0';
         printf("%s", buffer);
+    }
+
+    if (postResponse < 0)
+    {
+        fprintf(stderr, "Response error: %s", strerror(postResponse));
+        return;
+    }
 }
 void PATCH(int server_fd, const char *url, const char *path, char *body)
 {
     char requestMsg[BUFSIZ],
-        buffer[BUFSIZ];
+        buffer[BUFSIZ] = {0};
 
     size_t bodyLength = strlen(body);
 
@@ -240,16 +248,17 @@ void PUT(int server_fd, const char *url, const char *path, char *body)
         return;
     }
 
-    while ((putResponse = recv(server_fd, buffer, BUFSIZ, 0)) > 0)
-        ;
+    while ((putResponse = recv(server_fd, buffer, BUFSIZ - 1, 0)) > 0)
+    {
+        buffer[putResponse] = '\0';
+        printf("%s", buffer);
+    }
 
     if (putResponse < 0)
     {
         fprintf(stderr, "Receiving error: %s", strerror(errno));
         return;
     }
-
-    printf("%s", buffer);
 }
 void DELETE(int server_fd, const char *url, const char *path)
 {
