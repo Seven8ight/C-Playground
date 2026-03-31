@@ -5,6 +5,7 @@ typedef struct
     size_t responseLength;
     char *fullData;
     int statusCode;
+    int contentLength;
     char *headers;
     char *body;
 } Response;
@@ -53,6 +54,7 @@ void PUT(int server_fd, const char *url, const char *path, char *body);
 void DELETE(int server_fd, const char *url, const char *path);
 Response *createResponse();
 void formatter(Response *httpResponse);
+void freeResponseMemory(Response *response);
 
 int main(int argc, const char *args[])
 {
@@ -162,9 +164,12 @@ void GET(int server_fd, const char *url, const char *path)
 
     formatter(getResponse);
     printf("-----FORMATTED RESPONSE----\n\n");
-    printf("Response status code: %d\n\n", getResponse->statusCode);
+    printf("Response status code: %d\n", getResponse->statusCode);
+    printf("Response length: %d\n\n", getResponse->contentLength);
     printf("Response headers: %s\n\n", getResponse->headers);
     printf("Response body:%s\n\n", getResponse->body);
+
+    freeResponseMemory(getResponse);
 }
 void POST(int server_fd, const char *url, const char *path, char *body)
 {
@@ -185,7 +190,10 @@ void POST(int server_fd, const char *url, const char *path, char *body)
              path, url, bodyLength, body);
 
     int postRequest = send(server_fd, message, strlen(message), 0),
-        postResponse;
+        bytes_sent,
+        totalBytes = 0;
+
+    Response *postResponse = createResponse();
 
     if (postRequest == -1)
     {
@@ -193,17 +201,28 @@ void POST(int server_fd, const char *url, const char *path, char *body)
         return;
     }
 
-    while ((postResponse = recv(server_fd, buffer, BUFSIZ - 1, 0)) > 0)
+    while ((bytes_sent = recv(server_fd, buffer, BUFSIZ - 1, 0)) > 0)
     {
-        buffer[postResponse] = '\0';
-        printf("%s", buffer);
+        memcpy(postResponse->fullData + totalBytes, buffer, bytes_sent);
+        postResponse->responseLength += totalBytes;
+        totalBytes += bytes_sent;
+        postResponse->fullData[totalBytes] = '\0';
     }
 
-    if (postResponse < 0)
+    if (bytes_sent < 0)
     {
-        fprintf(stderr, "Response error: %s", strerror(postResponse));
+        fprintf(stderr, "Response error: %s", strerror(bytes_sent));
         return;
     }
+
+    formatter(postResponse);
+    printf("-------FORMATTED RESPONSE-------\n\n");
+    printf("Response status: %d\n", postResponse->statusCode);
+    printf("Response length: %d\n\n", postResponse->contentLength);
+    printf("Response headers: %s\n\n", postResponse->headers);
+    printf("Response body: %s\n\n", postResponse->body);
+
+    freeResponseMemory(postResponse);
 }
 void PATCH(int server_fd, const char *url, const char *path, char *body)
 {
@@ -224,7 +243,10 @@ void PATCH(int server_fd, const char *url, const char *path, char *body)
              path, url, bodyLength, body);
 
     int putRequest = send(server_fd, requestMsg, strlen(requestMsg), 0),
-        bytesSent, fullResponseLength = 0;
+        bytesSent, fullResponseLength = 0,
+        totalSize = 0;
+
+    Response *patchResponse = createResponse();
 
     if (putRequest < 0)
     {
@@ -234,8 +256,10 @@ void PATCH(int server_fd, const char *url, const char *path, char *body)
 
     while ((bytesSent = recv(server_fd, buffer, BUFSIZ - 1, 0)) > 0)
     {
-        buffer[bytesSent] = '\0';
-        printf("%s", buffer);
+        memcpy(patchResponse->fullData + totalSize, buffer, bytesSent);
+        totalSize += bytesSent;
+        patchResponse->responseLength += totalSize;
+        patchResponse->fullData[totalSize] = '\0';
     }
 
     if (bytesSent == -1)
@@ -243,6 +267,15 @@ void PATCH(int server_fd, const char *url, const char *path, char *body)
         fprintf(stderr, "Receiving error: %s", strerror(errno));
         return;
     }
+
+    formatter(patchResponse);
+    printf("-------FORMATTED RESPONSE-------\n\n");
+    printf("Response status: %d\n", patchResponse->statusCode);
+    printf("Response length: %d\n\n", patchResponse->contentLength);
+    printf("Response headers: %s\n\n", patchResponse->headers);
+    printf("Response body: %s\n\n", patchResponse->body);
+
+    freeResponseMemory(patchResponse);
 }
 void PUT(int server_fd, const char *url, const char *path, char *body)
 {
@@ -263,7 +296,9 @@ void PUT(int server_fd, const char *url, const char *path, char *body)
              path, url, bodyLength, body);
 
     int putRequest = send(server_fd, requestHeaders, strlen(requestHeaders), 0),
-        putResponse;
+        bytes_sent, totalSize = 0;
+
+    Response *putResponse = createResponse();
 
     if (putRequest < 0)
     {
@@ -271,17 +306,28 @@ void PUT(int server_fd, const char *url, const char *path, char *body)
         return;
     }
 
-    while ((putResponse = recv(server_fd, buffer, BUFSIZ - 1, 0)) > 0)
+    while ((bytes_sent = recv(server_fd, buffer, BUFSIZ - 1, 0)) > 0)
     {
-        buffer[putResponse] = '\0';
-        printf("%s", buffer);
+        memcpy(putResponse->fullData + totalSize, buffer, bytes_sent);
+        totalSize += bytes_sent;
+        putResponse->responseLength += totalSize;
+        putResponse->fullData[totalSize] = '\0';
     }
 
-    if (putResponse < 0)
+    if (bytes_sent < 0)
     {
         fprintf(stderr, "Receiving error: %s", strerror(errno));
         return;
     }
+
+    formatter(putResponse);
+    printf("-------FORMATTED RESPONSE-------\n\n");
+    printf("Response status: %d\n", putResponse->statusCode);
+    printf("Response length: %d\n\n", putResponse->contentLength);
+    printf("Response headers: %s\n\n", putResponse->headers);
+    printf("Response body: %s\n\n", putResponse->body);
+
+    freeResponseMemory(putResponse);
 }
 void DELETE(int server_fd, const char *url, const char *path)
 {
@@ -296,7 +342,8 @@ void DELETE(int server_fd, const char *url, const char *path)
              "\r\n",
              path, url);
 
-    int deleteRequest = send(server_fd, requestHeaders, strlen(requestHeaders), 0), bytes_sent;
+    int deleteRequest = send(server_fd, requestHeaders, strlen(requestHeaders), 0), bytes_sent, totalSize = 0;
+    Response *deleteResponse = createResponse();
 
     if (deleteRequest < 0)
     {
@@ -306,8 +353,10 @@ void DELETE(int server_fd, const char *url, const char *path)
 
     while ((bytes_sent = recv(server_fd, buffer, BUFSIZ - 1, 0) > 0))
     {
-        buffer[bytes_sent] = '\0';
-        printf("%s", buffer);
+        memcpy(deleteResponse->fullData + totalSize, buffer, bytes_sent);
+        totalSize += bytes_sent;
+        deleteResponse->responseLength += totalSize;
+        deleteResponse->fullData[totalSize] = '\0';
     }
 
     if (bytes_sent == -1)
@@ -315,6 +364,15 @@ void DELETE(int server_fd, const char *url, const char *path)
         fprintf(stderr, "Receiving error: %s", strerror(errno));
         return;
     }
+
+    formatter(deleteResponse);
+    printf("-------FORMATTED RESPONSE-------\n\n");
+    printf("Response status: %d\n", deleteResponse->statusCode);
+    printf("Response length: %d\n\n", deleteResponse->contentLength);
+    printf("Response headers: %s\n\n", deleteResponse->headers);
+    printf("Response body: %s\n\n", deleteResponse->body);
+
+    freeResponseMemory(deleteResponse);
 }
 Response *createResponse()
 {
@@ -331,6 +389,7 @@ Response *createResponse()
     newResponse->responseLength = 0;
     newResponse->headers = malloc(BUFSIZ);
     newResponse->statusCode = 0;
+    newResponse->contentLength = 0;
 
     return newResponse;
 }
@@ -342,15 +401,29 @@ void formatter(Response *httpResponse)
         return;
     }
 
-    char *border = strstr(httpResponse->fullData, "\r\n\r\n");
+    char *headers = strstr(httpResponse->fullData, "\r\n\r\n"),
+         *contentLength = strstr(httpResponse->fullData, "Content-Length");
 
-    if (border)
+    if (headers)
     {
-        *border = '\0';
+        *headers = '\0';
         httpResponse->headers = httpResponse->fullData;
 
-        httpResponse->body = border + 4;
+        httpResponse->body = headers + 4;
 
         sscanf(httpResponse->headers, "HTTP/1.1 %d", &httpResponse->statusCode);
     }
+    if (contentLength)
+        sscanf(httpResponse->headers, "Content-Length: %d", &httpResponse->statusCode);
+}
+void freeResponseMemory(Response *response)
+{
+    if (!response)
+    {
+        perror("Memory fault");
+        return;
+    }
+
+    free(response->fullData);
+    free(response);
 }
