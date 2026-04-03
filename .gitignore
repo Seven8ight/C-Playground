@@ -1,8 +1,10 @@
 **/*.exe
 **/*.app
-**/Index
+**/*.a
+**/*.o
 **/*.bin
 **/*.txt
+**/Index
 **/Without
 **/GetAddrInfo
 **/Client
