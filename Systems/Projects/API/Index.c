@@ -1,5 +1,10 @@
 #include "Header.h"
 
+void SigPipe()
+{
+    printf("Pipe error\n");
+}
+
 Server *createServer(int port)
 {
     Server *newServer = malloc(sizeof(Server));
@@ -104,10 +109,9 @@ char *fileContents(FILE *file)
         return NULL;
     }
 
-    fread(fileContents, fileSize, sizeof(char), file);
+    fread(fileContents, sizeof(char), fileSize, file);
     fileContents[fileSize] = '\0';
 
-    fclose(file);
     return fileContents;
 }
 
@@ -115,13 +119,12 @@ void acceptConnections(Server *server, fd_set *allFds, int *fd_max)
 {
     if (!server || !allFds)
     {
-        perror('Memory');
+        perror("Memory");
         return;
     }
 
-    int client_fd = accept(server->fd, server->serverInfo->ai_addr, server->serverInfo->ai_addrlen);
-    char requestBuffer[BUFSIZ] = {0},
-         fullRequest[BUFSIZ] = {0};
+    int client_fd = accept(server->fd, NULL, NULL);
+    char requestBuffer[BUFSIZ] = {0};
 
     if (client_fd == -1)
     {
@@ -131,20 +134,93 @@ void acceptConnections(Server *server, fd_set *allFds, int *fd_max)
 
     FD_SET(client_fd, allFds);
 
-    for (int i = 0; i < *fd_max; i++)
+    if (client_fd > *fd_max)
+        *fd_max = client_fd;
+}
+
+void readSocketData(int clientFd, fd_set *fds, int *fd_max)
+{
+    char buffer[BUFSIZ];
+
+    int bytes_sent = recv(clientFd, buffer, BUFSIZ - 1, 0);
+
+    if (bytes_sent <= 0)
     {
-        if (FD_ISSET(i, allFds))
+        if (clientFd == *fd_max)
         {
-            if (i > *fd_max)
-                *fd_max = i;
-
-            int bytes_sent, totalSize = 0;
-
-            while ((bytes_sent = recv(client_fd, requestBuffer, BUFSIZ, 0) > 0))
+            int j = 0;
+            for (int i = *fd_max; i >= 0; i--)
             {
-                memcpy(fullRequest + totalSize, requestBuffer, bytes_sent);
-                totalSize += bytes_sent;
+
+                if (FD_ISSET(i, fds))
+                {
+                    if (j < i)
+                        j = i;
+                }
+            }
+
+            *fd_max = j;
+        }
+
+        FD_CLR(clientFd, fds);
+        return;
+    }
+
+    buffer[bytes_sent] = '\0';
+
+    FILE *html = fileOpener("./Pages/index.html");
+
+    if (!html)
+    {
+        perror("File handling");
+        return;
+    }
+
+    char *htmlContent = fileContents(html);
+    if (!htmlContent)
+    {
+        fclose(html);
+        return;
+    }
+
+    size_t htmlContentSize = strlen(htmlContent);
+
+    char responseBody[BUFSIZ * 2];
+
+    snprintf(responseBody, sizeof(responseBody),
+             "HTTP/1.1 200 OK\r\n"
+             "Content-type: text/html\r\n"
+             "Content-length: %zu\r\n"
+             "Connection: close\r\n"
+             "\r\n"
+             "%s",
+             htmlContentSize, htmlContent);
+
+    int httpResponse = send(clientFd, responseBody, strlen(responseBody), 0);
+    if (httpResponse == -1)
+        fprintf(stderr, "Response error: %s\n", strerror(errno));
+
+    if (clientFd == *fd_max)
+    {
+        int j = 0;
+        for (int i = *fd_max; i >= 0; i--)
+        {
+
+            if (FD_ISSET(i, fds))
+            {
+                if (j < i)
+                    j = i;
             }
         }
+
+        *fd_max = j;
     }
+
+    FD_CLR(clientFd, fds);
+    close(clientFd);
+    fclose(html);
+}
+
+char *fileExtension(char *requestBuffer)
+{
 }
