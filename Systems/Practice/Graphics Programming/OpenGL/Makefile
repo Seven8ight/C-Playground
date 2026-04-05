@@ -3,8 +3,8 @@
 CC = gcc
 
 # Project files
-SRC = Index.c /opt/Glad/src/glad.c
-OUT = Index
+SRC = "Rectangle - 3.c" /opt/Glad/src/glad.c
+OUT = Rectangle
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/homebrew/include
