@@ -3,8 +3,8 @@
 CC = gcc
 
 # Project files
-SRC = "./Exercises - 1/Colors-3.c" /opt/Glad/src/glad.c
-OUT = Colors
+SRC = ./"Shaders - 4.c" /opt/Glad/src/glad.c
+OUT = Shaders
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/homebrew/include
