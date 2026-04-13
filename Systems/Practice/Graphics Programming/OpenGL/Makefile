@@ -3,8 +3,8 @@
 CC = gcc
 
 # Project files
-SRC = ./"Exercises - 2"/VertexAcross.c /opt/Glad/src/glad.c
-OUT = VertexAcross
+SRC = ./"Textures - 7.c" /opt/Glad/src/glad.c
+OUT = Textures
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/homebrew/include
