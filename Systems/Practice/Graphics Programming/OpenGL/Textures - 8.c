@@ -43,6 +43,7 @@ int main(void)
     glGenTextures(1, &textureId);
     glGenTextures(1, &textureId2);
 
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureId);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -50,17 +51,6 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    glBindTexture(GL_TEXTURE_2D, textureId2);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    char vertexFilePath[] = "GLSL/TextureVert.glsl",
-         fragmentFilePath[] = "GLSL/TextureFrag.glsl";
-
-    Shaders *shaders = createShaders(vertexFilePath, fragmentFilePath);
     GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
 
     if (data)
@@ -74,7 +64,33 @@ int main(void)
         return -3;
     }
 
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, textureId2);
     stbi_image_free(data);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    char vertexFilePath[] = "GLSL/TextureVert2.glsl",
+         fragmentFilePath[] = "GLSL/TextureFrag2.glsl";
+
+    Shaders *shaders = createShaders(vertexFilePath, fragmentFilePath);
+    GLenum format2 = (nrChannels2 == 4) ? GL_RGBA : GL_RGB;
+
+    if (data2)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, format2, width2, height2, 0, format2, GL_UNSIGNED_BYTE, data2);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        printf("Failed to load texture\n");
+        return -3;
+    }
+
+    stbi_image_free(data2);
 
     float vertices[] = {
         // positions // colors // texture coords
@@ -136,10 +152,15 @@ int main(void)
         glClearColor(0.3f, 0.5f, 0.6f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureId);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, textureId2);
         glUseProgram(shaders->shaderProgram);
 
         glUniform1i(glGetUniformLocation(shaders->shaderProgram, "ourTexture"), 0);
+        glUniform1i(glGetUniformLocation(shaders->shaderProgram, "ourTexture2"), 1);
         glBindVertexArray(vao);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

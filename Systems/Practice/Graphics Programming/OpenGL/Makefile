@@ -3,8 +3,8 @@
 CC = gcc
 
 # Project files
-SRC = ./"Textures - 7.c" /opt/Glad/src/glad.c
-OUT = Textures
+SRC = ./"Exercises - 3"/"Reverse.c" /opt/Glad/src/glad.c
+OUT = Reverse
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/homebrew/include
