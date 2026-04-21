@@ -3,8 +3,8 @@
 CC = gcc
 
 # Project files
-SRC = ./"Exercises - 3"/"Reverse.c" /opt/Glad/src/glad.c
-OUT = Reverse
+SRC = ./"Exercises - 3"/"Wrapping.c" /opt/Glad/src/glad.c
+OUT = Wrapping
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/homebrew/include
