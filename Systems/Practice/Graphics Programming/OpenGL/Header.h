@@ -11,6 +11,7 @@
 
 #include <glad.h>
 #include <GLFW/glfw3.h>
+#include <cglm.h>
 
 typedef void (*SetBool)(unsigned int shaderProgram, char *uniformName, bool value);
 typedef void (*SetInt)(unsigned int shaderProgram, char *uniformName, int value);

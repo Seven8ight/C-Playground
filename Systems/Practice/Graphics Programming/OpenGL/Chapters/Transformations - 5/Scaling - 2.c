@@ -1,4 +1,4 @@
-#include "Header.h"
+#include "../../Header.h"
 
 typedef struct
 {
@@ -73,7 +73,7 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    char vertexFilePath[] = "GLSL/TextureVert2.glsl",
+    char vertexFilePath[] = "GLSL/TransformVer1.glsl",
          fragmentFilePath[] = "GLSL/TextureFrag2.glsl";
 
     Shaders *shaders = createShaders(vertexFilePath, fragmentFilePath);
@@ -144,6 +144,13 @@ int main(void)
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
+    mat4 trans = GLM_MAT4_IDENTITY_INIT;
+    vec3 positionVector = {0.0f, 0.0f, 1.0f},
+         rotationVector = {0.5, 0.5, 0.5};
+
+    glm_rotate(trans, glm_rad(90.0f), positionVector);
+    glm_scale(trans, rotationVector);
+
     while (!glfwWindowShouldClose(window))
     {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -161,6 +168,7 @@ int main(void)
 
         glUniform1i(glGetUniformLocation(shaders->shaderProgram, "ourTexture"), 0);
         glUniform1i(glGetUniformLocation(shaders->shaderProgram, "ourTexture2"), 1);
+        glUniformMatrix4fv(glGetUniformLocation(shaders->shaderProgram, "transform"), 1, GL_FALSE, (float *)trans);
         glBindVertexArray(vao);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

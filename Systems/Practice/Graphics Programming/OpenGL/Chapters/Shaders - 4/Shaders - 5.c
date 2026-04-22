@@ -1,4 +1,4 @@
-#include "Header.h"
+#include "../../Header.h"
 
 const int WINDOW_WIDTH = 800,
           WINDOW_HEIGHT = 600;
@@ -77,15 +77,9 @@ int main()
     glLinkProgram(shaderProgram);
 
     float vertices[] = {
-        -0.5f,
-        0.0f,
-        0.0f, // bottom left
-        0.0f,
-        0.5f,
-        0.0f, // top
-        0.5f,
-        0.0f,
-        0.0f, // bottom right
+        -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left - 3, colors - 3->6
+        0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,  // top - 3, colors - 3->6
+        0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f   // bottom right - 3, colors - 3->6
     };
     unsigned int vbo, vao;
 
@@ -96,8 +90,12 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     glBufferData(GL_ARRAY_BUFFER, sizeof vertices, vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, NULL);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void *)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glUseProgram(shaderProgram);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -106,13 +104,6 @@ int main()
 
         glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-
-        glUseProgram(shaderProgram);
-
-        float timeValue = glfwGetTime(),
-              greenValue = sin(timeValue) / 2.0f + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 3);

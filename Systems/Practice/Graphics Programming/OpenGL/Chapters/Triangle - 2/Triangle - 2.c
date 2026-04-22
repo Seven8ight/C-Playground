@@ -1,4 +1,4 @@
-#include "Header.h"
+#include "../../Header.h"
 
 void GLFWinit();
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
