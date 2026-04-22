@@ -3,8 +3,8 @@
 CC = gcc
 
 # Project files
-SRC = ./"Exercises - 3"/"Wrapping.c" /opt/Glad/src/glad.c
-OUT = Wrapping
+SRC = ./"Exercises - 3"/"Visibility.c" /opt/Glad/src/glad.c
+OUT = Visibility
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/homebrew/include
