@@ -180,6 +180,12 @@ int main(void)
         glfwPollEvents();
     }
 
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &ebo);
+    glDeleteVertexArrays(1, &vao);
+
+    glfwTerminate();
+
     return 0;
 }
 

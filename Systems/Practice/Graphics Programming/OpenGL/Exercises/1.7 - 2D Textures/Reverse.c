@@ -1,4 +1,4 @@
-#include "../Header.h"
+#include "../../Header.h"
 
 const int WINDOW_WIDTH = 800,
           WINDOW_HEIGHT = 500;
@@ -86,8 +86,8 @@ int main()
     glGenTextures(1, &textureId2);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, textureId2);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
@@ -114,14 +114,14 @@ int main()
         0.0f,
         0.0f,
         1.0f,
-        2.0f, // top right
+        1.0f, // top right
         0.5f,
         -0.5f,
         0.0f,
         0.0f,
         1.0f,
         0.0f,
-        1.4f,
+        1.0f,
         0.0f, // bottom right
         -0.5f,
         -0.5f,

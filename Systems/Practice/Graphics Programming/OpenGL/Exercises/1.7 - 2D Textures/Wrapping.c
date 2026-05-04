@@ -1,4 +1,4 @@
-#include "../Header.h"
+#include "../../Header.h"
 
 const int WINDOW_WIDTH = 800,
           WINDOW_HEIGHT = 500;
@@ -12,7 +12,6 @@ void GLFWInit();
 char *shaderFile(char *filePath);
 Shaders *createShaders(char *vertexFilePath, char *fragmentFilePath);
 void framebuffer_size_callback(GLFWwindow *windoow, int width, int height);
-void processInput(GLFWwindow *window, float *visibility);
 
 int main()
 {
@@ -41,7 +40,7 @@ int main()
 
     // Shaders
     char vertexFilePath[] = "./Exercises - 3/GLSL/Vertex1.glsl",
-         fragmentFilePath[] = "./Exercises - 3/GLSL/Frag2.glsl";
+         fragmentFilePath[] = "./Exercises - 3/GLSL/Frag1.glsl";
 
     Shaders *shaders = createShaders(vertexFilePath, fragmentFilePath);
     if (!shaders)
@@ -64,8 +63,8 @@ int main()
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     if (data)
     {
@@ -159,7 +158,6 @@ int main()
     glEnableVertexAttribArray(2);
     glEnableVertexAttribArray(3);
 
-    float visibility = 0;
     while (!glfwWindowShouldClose(window))
     {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -173,9 +171,6 @@ int main()
         glUniform1i(glGetUniformLocation(shaders->shaderProgram, "ourTexture"), 0);
         glUniform1i(glGetUniformLocation(shaders->shaderProgram, "ourTexture2"), 1);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        processInput(window, &visibility);
-        glUniform1f(glGetUniformLocation(shaders->shaderProgram, "visibility"), visibility);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -299,15 +294,4 @@ Shaders *createShaders(char *vertexFilePath, char *fragmentFilePath)
     glDeleteShader(shaders->vertexShader);
     glDeleteShader(shaders->fragmentShader);
     return shaders;
-}
-void processInput(GLFWwindow *window, float *visibility)
-{
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    {
-        if (*visibility < 1.0)
-            *visibility += 0.1;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        if (*visibility > 0.0)
-            *visibility -= .1;
 }

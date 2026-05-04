@@ -1,4 +1,4 @@
-#include "../Header.h"
+#include "../../Header.h"
 
 const int WINDOW_WIDTH = 800,
           WINDOW_HEIGHT = 500;
@@ -12,6 +12,7 @@ void GLFWInit();
 char *shaderFile(char *filePath);
 Shaders *createShaders(char *vertexFilePath, char *fragmentFilePath);
 void framebuffer_size_callback(GLFWwindow *windoow, int width, int height);
+void processInput();
 
 int main()
 {
@@ -63,8 +64,8 @@ int main()
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     if (data)
     {
@@ -86,8 +87,8 @@ int main()
     glGenTextures(1, &textureId2);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, textureId2);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
@@ -114,14 +115,14 @@ int main()
         0.0f,
         0.0f,
         1.0f,
-        1.0f, // top right
+        2.0f, // top right
         0.5f,
         -0.5f,
         0.0f,
         0.0f,
         1.0f,
         0.0f,
-        1.0f,
+        1.4f,
         0.0f, // bottom right
         -0.5f,
         -0.5f,
