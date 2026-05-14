@@ -205,7 +205,6 @@ int main(void)
         glUniform1i(glGetUniformLocation(shaders->shaderProgram, "texture1"), 0);
 
         // Transformations
-        // mat4 modelMatrix = GLM_MAT4_IDENTITY_INIT;
         vec3 translationVector = {0.0f, 0.0f, 3.0f};
 
         // View matrix

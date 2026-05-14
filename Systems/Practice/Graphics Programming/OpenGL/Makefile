@@ -3,8 +3,8 @@
 CC = gcc
 
 # Project files
-SRC = ./Chapters/"Camera - 8"/"Rotation.c" /opt/Glad/src/glad.c
-OUT = Rotation
+SRC = ./Exercises/"2.0 - Camera"/Camera/Index.c /opt/Glad/src/glad.c
+OUT = CameraIndex
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/cglm/include/cglm -I/opt/homebrew/include
