@@ -3,8 +3,8 @@
 CC = gcc
 
 # Project files
-SRC = ./Exercises/"2.0 - Camera"/Camera/Index.c /opt/Glad/src/glad.c
-OUT = CameraIndex
+SRC = ./Remembrance/Coordinates.c /opt/Glad/src/glad.c
+OUT = RCoordinates
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/cglm/include/cglm -I/opt/homebrew/include

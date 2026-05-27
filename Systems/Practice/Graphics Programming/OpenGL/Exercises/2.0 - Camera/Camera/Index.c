@@ -27,11 +27,12 @@ struct Camera
 void GLFWInit();
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
-char *fileReader(char *filePath);
-Shaders *createShader(char *vertexFilePath, char *fragmentFilePath);
+void setupMouseInput(GLFWwindow *window);
+void setupKeyboardInput(GLFWwindow *window);
 void mouseCallback(GLFWwindow *window, double xpos, double ypos);
 void scrollCallback(GLFWwindow *window, double xoffset, double yoffset);
-void setupKeyboardInput(GLFWwindow *window);
+char *fileReader(char *filePath);
+Shaders *createShader(char *vertexFilePath, char *fragmentFilePath);
 Camera *createCamera();
 
 int main(void)
