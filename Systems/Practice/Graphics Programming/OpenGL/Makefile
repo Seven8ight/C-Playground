@@ -3,8 +3,8 @@
 CC = gcc
 
 # Project files
-SRC = ./Remembrance/Coordinates.c /opt/Glad/src/glad.c
-OUT = RCoordinates
+SRC = ./Remembrance/Circle.c /opt/Glad/src/glad.c
+OUT = Circle
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/cglm/include/cglm -I/opt/homebrew/include
@@ -18,7 +18,7 @@ LDFLAGS = $(LIBS)
 
 # Build target
 all:
-	$(CC) $(SRC) $(CFLAGS) $(LDFLAGS) -o $(OUT)
+	$(CC) -g $(SRC) $(CFLAGS) $(LDFLAGS) -o $(OUT)
 
 # Clean build
 clean:
