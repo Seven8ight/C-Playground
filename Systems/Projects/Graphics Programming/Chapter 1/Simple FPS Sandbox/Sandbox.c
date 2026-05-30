@@ -7,12 +7,19 @@ typedef struct
 {
     unsigned int vertexShader, fragmentShader, shaderProgram;
 } Shaders;
+
 typedef struct
 {
     bool firstMouse;
     float yaw, pitch, zoom;
     int lastX, lastY;
 } Camera;
+
+typedef enum
+{
+    FLY_CAM,
+    FPS_CAM
+} CameraType;
 
 void GLFWInit();
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
@@ -21,12 +28,27 @@ void setUniformMatrix(Shaders *shaders, char *uniformLabel, mat4 *value);
 char *shaderFile(char *filePath);
 Shaders *createShaders(char *vertexFilePath, char *fragmentFilePath);
 Camera *createCamera();
-void mouseCallback(GLFWwindow *window);
-void handleCameraMovement(GLFWwindow *window, float deltaTime, vec3 *cameraPos, vec3 *cameraDirection, vec3 *cameraUp);
-void handleCameraRotation(GLFWwindow *window);
+void mouseCallback(GLFWwindow *window, double xoffset, double yoffset);
+void scrollCallback(GLFWwindow *window, double xoffset, double yoffset);
+void handleCameraMovement(GLFWwindow *window, CameraType camType, float deltaTime, vec3 *cameraPos, vec3 *cameraDirection, vec3 *cameraUp);
+void flyCamera(GLFWwindow *window, CameraType camType, float deltaTime, mat4 *viewMatrix, vec3 *viewTranslation, vec3 *cameraPosition, vec3 *cameraDirection, vec3 *cameraTarget, vec3 *cameraUp);
+void fpsCamera(GLFWwindow *window, CameraType camType, float deltaTime, mat4 *viewMatrix, vec3 *viewTranslation, vec3 *cameraPosition, vec3 *cameraDirection, vec3 *cameraTarget, vec3 *cameraUp);
 
-int main(void)
+int main(int argc, char *args[])
 {
+    if (argc <= 1)
+    {
+        printf("Invalid camera type");
+        return -1;
+    }
+
+    char *cameraType = args[1];
+    CameraType camType;
+    if (strcmp(cameraType, "fly_cam") == 0)
+        camType = FLY_CAM;
+    else
+        camType = FPS_CAM;
+
     GLFWInit();
 
     char windowTitle[] = "Sandbox";
@@ -58,6 +80,9 @@ int main(void)
         return -3;
     }
     glfwSetWindowUserPointer(sandboxWindow, camera);
+    glfwSetInputMode(sandboxWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(sandboxWindow, mouseCallback);
+    glfwSetScrollCallback(sandboxWindow, scrollCallback);
 
     char vertexFilePath[] = "Shaders/SandboxVert.glsl",
          fragmentFilePath[] = "Shaders/SandboxFrag.glsl";
@@ -115,18 +140,25 @@ int main(void)
 
     glUseProgram(shaders->shaderProgram);
 
-    mat4 modelMatrix = GLM_MAT4_IDENTITY_INIT,
-         viewMatrix = GLM_MAT4_IDENTITY_INIT,
+    mat4 viewMatrix = GLM_MAT4_IDENTITY_INIT,
          projectionMatrix = GLM_MAT4_IDENTITY_INIT;
+
+    vec3 cubePositions[] = {
+        {0.0f, 0.0f, 0.0f},
+        {2.0f, 0.0f, -15.0f},
+        {-1.5f, -0.2f, -2.5f},
+        {-3.8f, -0.0f, -12.3f},
+        {2.4f, -0.4f, -3.5f},
+        {-1.7f, 0.0f, -7.5f},
+        {1.3f, 0.0f, -2.5f},
+        {1.5f, 0.0f, -2.5f},
+        {1.5f, 0.2f, -1.5f},
+        {-1.3f, 0.0f, -1.5f}};
 
     vec3 translationVector = {0.0f, 0.0f, -3.0f};
     float aspectRatio = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
 
     glm_translate(viewMatrix, translationVector);
-    glm_perspective(glm_rad(45), aspectRatio, 0.1f, 100.0f, projectionMatrix);
-
-    setUniformMatrix(shaders, "modelMatrix", (mat4 *)modelMatrix);
-    setUniformMatrix(shaders, "projectionMatrix", (mat4 *)projectionMatrix);
 
     vec3 cameraPos = {0.0f, 0.0f, 3.0f},
          cameraTarget = {0.0f, 0.0f, 0.0f},
@@ -148,22 +180,35 @@ int main(void)
         lastFrame = currentFrame;
 
         processInput(sandboxWindow);
-        handleCameraMovement(sandboxWindow, deltaTime, (vec3 *)cameraPos, (vec3 *)cameraDirection, (vec3 *)cameraUp);
 
-        glm_mat3_identity(viewMatrix);
-        vec3 targetPoint;
-        glm_vec3_add(cameraPos, cameraDirection, targetPoint); // Assuming cameraDirection acts as your front vector
-        glm_translate(viewMatrix, viewTranslation);
-        glm_lookat(cameraPos, targetPoint, cameraUp, viewMatrix);
+        if (camType == FLY_CAM)
+            flyCamera(sandboxWindow, camType, deltaTime, viewMatrix, viewTranslation, cameraPos, cameraDirection, cameraTarget, cameraUp);
+        else
+            fpsCamera(sandboxWindow, camType, deltaTime, viewMatrix, viewTranslation, cameraPos, cameraDirection, cameraTarget, cameraUp);
 
         setUniformMatrix(shaders, "viewMatrix", (mat4 *)viewMatrix);
 
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void *)0);
+        glm_perspective(glm_rad(camera->zoom), aspectRatio, 0.1f, 100.0f, projectionMatrix);
+        setUniformMatrix(shaders, "projectionMatrix", (mat4 *)projectionMatrix);
+
+        for (int i = 0; i < 10; i++)
+        {
+            mat4 modelMatrix = GLM_MAT4_IDENTITY_INIT;
+            glm_translate(modelMatrix, cubePositions[i]);
+            vec3 rotationAxis = {0.5f, 0.1f, 0.5f};
+
+            if (i % 2)
+                glm_rotate(modelMatrix, glm_rad(glfwGetTime()), rotationAxis);
+
+            setUniformMatrix(shaders, "modelMatrix", (mat4 *)modelMatrix);
+            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void *)0);
+        }
 
         glfwSwapBuffers(sandboxWindow);
         glfwPollEvents();
     }
 
+    glfwTerminate();
     return 0;
 }
 
@@ -181,8 +226,20 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 }
 void processInput(GLFWwindow *window)
 {
+    static bool polygonLines = false;
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
+
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+    {
+        polygonLines = !polygonLines;
+
+        if (polygonLines)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        else
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 }
 void setUniformMatrix(Shaders *shaders, char *uniformLabel, mat4 *value)
 {
@@ -302,31 +359,82 @@ Camera *createCamera()
         return NULL;
     }
 
-    camera->firstMouse = false;
+    camera->firstMouse = true;
     camera->zoom = 45.0f;
     camera->yaw = -90.0f;
+    camera->pitch = 0.0f;
     camera->lastX = WINDOW_WIDTH / 2;
     camera->lastY = WINDOW_HEIGHT / 2;
 
     return camera;
 }
-void handleCameraMovement(GLFWwindow *window, float deltaTime, vec3 *cameraPos, vec3 *cameraDirection, vec3 *cameraUp)
+void mouseCallback(GLFWwindow *window, double xpos, double ypos)
+{
+    Camera *camera = (Camera *)glfwGetWindowUserPointer(window);
+    if (!camera)
+    {
+        perror("Camera");
+        return;
+    }
+
+    if (camera->firstMouse)
+    {
+        camera->lastX = xpos;
+        camera->lastY = ypos;
+        camera->firstMouse = false;
+        return;
+    }
+
+    float xoffset = xpos - camera->lastX;
+    float yoffset = -(ypos - camera->lastY);
+
+    const float sensitivity = 0.01f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    camera->yaw += xoffset;
+    camera->pitch += yoffset;
+
+    if (camera->pitch > 89.0f)
+        camera->pitch = 89.0f;
+    if (camera->pitch < -89.0f)
+        camera->pitch = -89.0f;
+
+    camera->lastX = xpos;
+    camera->lastY = ypos;
+}
+void scrollCallback(GLFWwindow *window, double xoffset, double yoffset)
+{
+    Camera *camera = (Camera *)glfwGetWindowUserPointer(window);
+
+    camera->zoom -= (float)yoffset;
+    if (camera->zoom < 1.0f)
+        camera->zoom = 1.0f;
+    if (camera->zoom > 45.0f)
+        camera->zoom = 45.0f;
+}
+void handleCameraMovement(GLFWwindow *window, CameraType camType, float deltaTime, vec3 *cameraPos, vec3 *cameraDirection, vec3 *cameraUp)
 {
     float cameraSpeed = 2.5f * deltaTime;
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        cameraSpeed *= 2;
+    else
+        cameraSpeed = 2.5f * deltaTime;
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
     {
         vec3 newCameraPosition;
         glm_vec3_scale((float *)cameraDirection, cameraSpeed, newCameraPosition);
         glm_vec3_add((float *)cameraPos, newCameraPosition, (float *)cameraPos);
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
     {
         vec3 newCameraPosition;
         glm_vec3_scale((float *)cameraDirection, cameraSpeed, newCameraPosition);
         glm_vec3_sub((float *)cameraPos, newCameraPosition, (float *)cameraPos);
     }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
     {
         vec3 crossResult;
         glm_vec3_cross(cameraDirection, cameraUp, crossResult);
@@ -336,7 +444,7 @@ void handleCameraMovement(GLFWwindow *window, float deltaTime, vec3 *cameraPos, 
         glm_vec3_scale(crossResult, cameraSpeed, velocity);
         glm_vec3_sub(cameraPos, velocity, cameraPos);
     }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
     {
         vec3 crossResult;
         glm_vec3_cross(cameraDirection, cameraUp, crossResult);
@@ -347,4 +455,48 @@ void handleCameraMovement(GLFWwindow *window, float deltaTime, vec3 *cameraPos, 
         glm_vec3_add(cameraPos, velocity, cameraPos);
     }
 }
-void handleCameraRotation(GLFWwindow *window) {}
+void flyCamera(GLFWwindow *window, CameraType camType, float deltaTime, mat4 *viewMatrix, vec3 *viewTranslation, vec3 *cameraPosition, vec3 *cameraDirection, vec3 *cameraTarget, vec3 *cameraUp)
+{
+    Camera *camera = (Camera *)glfwGetWindowUserPointer(window);
+
+    glm_mat4_identity(viewMatrix);
+    vec3 targetPoint;
+    glm_vec3_add(cameraPosition, cameraDirection, targetPoint);
+    glm_translate(viewMatrix, viewTranslation);
+    glm_lookat(cameraPosition, targetPoint, cameraUp, viewMatrix);
+
+    vec3 direction = {
+        cos(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch)),
+        sin(glm_rad(camera->pitch)),
+        sin(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch))};
+
+    glm_normalize_to(direction, cameraDirection);
+
+    handleCameraMovement(window, camType, deltaTime, (vec3 *)cameraPosition, (vec3 *)cameraDirection, (vec3 *)cameraUp);
+}
+void fpsCamera(GLFWwindow *window, CameraType camType, float deltaTime, mat4 *viewMatrix, vec3 *viewTranslation, vec3 *cameraPosition, vec3 *cameraDirection, vec3 *cameraTarget, vec3 *cameraUp)
+{
+    Camera *camera =
+        (Camera *)glfwGetWindowUserPointer(window);
+
+    vec3 direction = {
+        cos(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch)),
+        sin(glm_rad(camera->pitch)),
+        sin(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch))};
+
+    glm_normalize_to(direction, cameraDirection);
+
+    vec3 front;
+    glm_vec3_copy(cameraDirection, front);
+
+    front[1] = 0.0f;
+    glm_normalize(front);
+
+    handleCameraMovement(window, camType, deltaTime, cameraPosition, &front, cameraUp);
+
+    vec3 targetPoint;
+    glm_vec3_add(cameraPosition, cameraDirection, targetPoint);
+
+    glm_mat4_identity(viewMatrix);
+    glm_lookat(cameraPosition, targetPoint, cameraUp, viewMatrix);
+}
