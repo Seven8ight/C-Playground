@@ -20,27 +20,37 @@ void processInput(GLFWwindow *window, float deltaTime, vec3 cameraFront, vec3 ca
 void mouseCallback(GLFWwindow *window, double xpos, double ypos);
 void scrollCallback(GLFWwindow *window, double xoffset, double yoffset);
 Shaders *createShaders(char *vertexFilePath, char *fragmentFilePath);
-void lookAt_fixed(vec3 eye, vec3 dir, vec3 up, vec3 right, mat4 dest)
+void lookAt_fixed(vec3 eye, vec3 target, vec3 up, mat4 dest)
 {
-    // 1. Set the rotation part (Rows are the axes)
-    dest[0][0] = right[0];
-    dest[1][0] = right[1];
-    dest[2][0] = right[2];
+    vec3 f, r, u;
 
-    dest[0][1] = up[0];
-    dest[1][1] = up[1];
-    dest[2][1] = up[2];
+    // 1. Calculate Front (Direction) vector: f = normalize(eye - target)
+    glm_vec3_sub(eye, target, f);
+    glm_vec3_normalize(f);
 
-    dest[0][2] = dir[0]; // Usually -forward
-    dest[1][2] = dir[1];
-    dest[2][2] = dir[2];
+    // 2. Calculate Right vector: r = normalize(cross(up, f))
+    glm_vec3_cross(up, f, r);
+    glm_vec3_normalize(r);
 
-    // 2. Set the translation part (Dot products)
-    dest[3][0] = -glm_vec3_dot(right, eye);
-    dest[3][1] = -glm_vec3_dot(up, eye);
-    dest[3][2] = -glm_vec3_dot(dir, eye);
+    // 3. Calculate true local Up vector: u = cross(f, r)
+    glm_vec3_cross(f, r, u);
 
-    // 3. Fill in the rest
+    // 4. Fill translation and rotation parts in dest
+    dest[0][0] = r[0];
+    dest[1][0] = r[1];
+    dest[2][0] = r[2];
+    dest[3][0] = -glm_vec3_dot(r, eye);
+
+    dest[0][1] = u[0];
+    dest[1][1] = u[1];
+    dest[2][1] = u[2];
+    dest[3][1] = -glm_vec3_dot(u, eye);
+
+    dest[0][2] = f[0];
+    dest[1][2] = f[1];
+    dest[2][2] = f[2];
+    dest[3][2] = -glm_vec3_dot(f, eye);
+
     dest[0][3] = dest[1][3] = dest[2][3] = 0.0f;
     dest[3][3] = 1.0f;
 }
@@ -81,8 +91,8 @@ int main(void)
     // configure global opengl state
     // -----------------------------
 
-    char vertexFilePath[] = "Chapters/Camera - 8/Shaders/CameraVert.glsl",
-         fragmentFilePath[] = "Chapters/Camera - 8/Shaders/CameraFrag.glsl";
+    char vertexFilePath[] = "Chapters/Chapter 1/Camera - 8/Shaders/CameraVert.glsl",
+         fragmentFilePath[] = "Chapters/Chapter 1/Camera - 8/Shaders/CameraFrag.glsl";
     Shaders *shaders = createShaders(vertexFilePath, fragmentFilePath);
 
     unsigned int textureId;
@@ -98,7 +108,7 @@ int main(void)
 
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load("Chapters/Camera - 8/Shaders/Donut-3.png", &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load("Chapters/Chapter 1/Camera - 8/Shaders/Donut-3.png", &width, &height, &nrChannels, 0);
     GLint format = nrChannels == 4 ? GL_RGBA : GL_RGB;
     if (data)
     {
@@ -234,7 +244,7 @@ int main(void)
         // View matrix
         mat4 viewMatrix = GLM_MAT4_IDENTITY_INIT;
         glm_vec3_add(cameraPosition, cameraFront, cameraTarget);
-        lookAt_fixed(cameraPosition, cameraFront, cameraUp, cameraTarget, viewMatrix);
+        lookAt_fixed(cameraPosition, cameraFront, cameraUp, viewMatrix);
         // glm_lookat(cameraPosition, cameraTarget, cameraUp, viewMatrix);
 
         vec3 direction = {
@@ -404,6 +414,13 @@ Shaders *createShaders(char *vertexFilePath, char *fragmentFilePath)
 
     FILE *vertexFile = fopen(vertexFilePath, "r"),
          *fragmentFile = fopen(fragmentFilePath, "r");
+
+    if (!vertexFile || !fragmentFile)
+    {
+        perror("Invalid file pointer");
+        free(shaders);
+        return NULL;
+    }
 
     fseek(vertexFile, 0, SEEK_END);
     long vertexFileLength = ftell(vertexFile);

@@ -3,8 +3,8 @@
 CC = gcc
 
 # Project files
-SRC = ./Chapters/"Camera - 8"/Rotation.c /opt/Glad/src/glad.c
-OUT = Rotation
+SRC = "./Exercises/Chapter 2/Colors - 09/Colors.c"  /opt/Glad/src/glad.c
+OUT = Colors
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/cglm/include/cglm -I/opt/homebrew/include
