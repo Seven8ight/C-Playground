@@ -1,10 +1,10 @@
 
 # Compiler
-CC = gcc
+CC = /usr/bin/clang
 
 # Project files
-SRC = "./Exercises/Chapter 2/Colors - 09/Colors.c"  /opt/Glad/src/glad.c
-OUT = Colors
+SRC = "./Exercises/Chapter 2/Lighting Maps - 011/Maps.c"  /opt/Glad/src/glad.c -Wall -Wextra -Wpedantic
+OUT = MapsExercise
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/cglm/include/cglm -I/opt/homebrew/include
@@ -13,8 +13,10 @@ INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/cglm/include/
 LIBS = -L/opt/homebrew/lib -lglfw -framework OpenGL
 
 # Flags
-CFLAGS = $(INCLUDES)
-LDFLAGS = $(LIBS)
+SDK := /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+
+CFLAGS = $(INCLUDES) -isysroot $(SDK)
+LDFLAGS = $(LIBS) -isysroot $(SDK)
 
 # Build target
 all:
