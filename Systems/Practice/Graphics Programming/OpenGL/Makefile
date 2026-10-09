@@ -3,8 +3,8 @@
 CC = /usr/bin/clang
 
 # Project files
-SRC = "./Exercises/Chapter 2/Lighting Maps - 011/Maps.c"  /opt/Glad/src/glad.c -Wall -Wextra -Wpedantic
-OUT = MapsExercise
+SRC = "./Chapters/Chapter 2/13 - Multiple Lights/Main.c"  /opt/Glad/src/glad.c -Wall -Wextra -Wpedantic
+OUT = Multiple
 
 # Include paths
 INCLUDES = -I/opt/Glad/include/glad -I/opt/Glad/include/KHR -I/opt/cglm/include/cglm -I/opt/homebrew/include
